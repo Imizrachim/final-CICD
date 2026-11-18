@@ -1,0 +1,20 @@
+# --- Dependencias de Ejecución (Backend) ---
+fastapi==0.115.8
+uvicorn[standard]==0.34.0
+sqlalchemy==2.0.38
+psycopg[binary]==3.2.4
+pydantic==2.10.6
+python-dotenv==1.0.1
+
+# --- Herramientas de Pruebas y Cobertura ---
+pytest==8.3.4
+pytest-cov==6.0.0
+pytest-html==4.1.1
+httpx==0.28.1
+requests==2.32.3
+selenium==4.28.1
+
+# --- Herramientas de Calidad y Análisis Estático ---
+flake8==7.1.1
+pylint==3.3.4
+black==25.1.0

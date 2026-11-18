@@ -1,0 +1,23 @@
+[MAIN]
+ignore=.git,__pycache__,.venv,venv,env,htmlcov,.pytest_cache,node_modules,frontend
+jobs=1
+py-version=3.11
+
+[MESSAGES CONTROL]
+disable=
+    C0114,
+    C0115,
+    C0116,
+    R0903,
+    R0801,
+    W0621,
+    E1102
+
+[FORMAT]
+max-line-length=88
+
+[DESIGN]
+max-args=8
+max-positional-arguments=8
+max-attributes=10
+min-public-methods=0
