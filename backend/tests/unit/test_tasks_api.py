@@ -85,6 +85,29 @@ def test_get_task_by_id_success(client: TestClient) -> None:
     assert data["description"] == "Detalle específico"
 
 
+def test_update_task_success(client: TestClient) -> None:
+    """Verifica la actualización completa (PUT) de una tarea existente."""
+    create_res = client.post(
+        "/api/tasks",
+        json={"title": "Título original", "description": "Descripción original"},
+    )
+    task_id = create_res.json()["id"]
+
+    update_res = client.put(
+        f"/api/tasks/{task_id}",
+        json={
+            "title": "Título actualizado",
+            "description": "Descripción actualizada",
+            "status": "Completed",
+        },
+    )
+    assert update_res.status_code == 200
+    updated = update_res.json()
+    assert updated["title"] == "Título actualizado"
+    assert updated["description"] == "Descripción actualizada"
+    assert updated["status"] == "Completed"
+
+
 def test_change_task_status_patch(client: TestClient) -> None:
     """Verifica el cambio de estado mediante PATCH /api/tasks/{id}/status."""
     create_res = client.post(
@@ -156,10 +179,17 @@ def test_validation_rejects_invalid_data(client: TestClient) -> None:
 
 
 def test_non_existent_task_returns_404(client: TestClient) -> None:
-    """Verifica el manejo de tareas inexistentes en los endpoints por ID."""
+    """Verifica el manejo de tareas inexistentes en todos los endpoints por ID."""
     missing_id = 99999
 
     assert client.get(f"/api/tasks/{missing_id}").status_code == 404
+    assert (
+        client.put(
+            f"/api/tasks/{missing_id}",
+            json={"title": "No existe", "description": ""},
+        ).status_code
+        == 404
+    )
     assert (
         client.patch(
             f"/api/tasks/{missing_id}/status",

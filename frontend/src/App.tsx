@@ -18,6 +18,7 @@ import {
 export const App: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filter, setFilter] = useState<TaskFilterValue>('All');
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -60,17 +61,33 @@ export const App: React.FC = () => {
     return tasks.filter((t) => t.status === filter);
   }, [tasks, filter]);
 
-  const handleCreateTask = async (
+  const handleCreateOrUpdate = async (
     payload: TaskCreateInput,
   ): Promise<boolean> => {
     setIsSubmitting(true);
     try {
-      const created = await taskService.createTask(payload);
-      setTasks((prev) => [created, ...prev]);
-      setAlert({
-        type: 'success',
-        message: 'Tarea creada exitosamente.',
-      });
+      if (editingTask) {
+        const updated = await taskService.updateTask(editingTask.id, {
+          title: payload.title,
+          description: payload.description,
+          status: editingTask.status,
+        });
+        setTasks((prev) =>
+          prev.map((item) => (item.id === updated.id ? updated : item)),
+        );
+        setEditingTask(null);
+        setAlert({
+          type: 'success',
+          message: 'Tarea actualizada correctamente.',
+        });
+      } else {
+        const created = await taskService.createTask(payload);
+        setTasks((prev) => [created, ...prev]);
+        setAlert({
+          type: 'success',
+          message: 'Tarea creada exitosamente.',
+        });
+      }
       return true;
     } catch (error) {
       const message =
@@ -119,6 +136,9 @@ export const App: React.FC = () => {
     try {
       await taskService.deleteTask(taskToDelete.id);
       setTasks((prev) => prev.filter((item) => item.id !== taskToDelete.id));
+      if (editingTask?.id === taskToDelete.id) {
+        setEditingTask(null);
+      }
       setTaskToDelete(null);
       setAlert({
         type: 'success',
@@ -151,8 +171,10 @@ export const App: React.FC = () => {
         <main className="dashboard-grid">
           <aside className="dashboard-sidebar">
             <TaskForm
+              editingTask={editingTask}
               isSubmitting={isSubmitting}
-              onSubmit={handleCreateTask}
+              onSubmit={handleCreateOrUpdate}
+              onCancelEdit={() => setEditingTask(null)}
             />
           </aside>
 
@@ -172,6 +194,7 @@ export const App: React.FC = () => {
               isLoading={isLoading}
               isBusy={isSubmitting}
               onToggleStatus={handleToggleStatus}
+              onEdit={(task) => setEditingTask(task)}
               onRequestDelete={(task) => setTaskToDelete(task)}
             />
           </section>

@@ -38,7 +38,7 @@ describe('taskService', () => {
     expect(task.title).toBe('Tarea de prueba API');
   });
 
-  it('crea, cambia estado y elimina una tarea', async () => {
+  it('crea, actualiza, cambia estado y elimina una tarea', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
     fetchSpy.mockResolvedValueOnce(
@@ -50,7 +50,17 @@ describe('taskService', () => {
     });
     expect(created.id).toBe(1);
 
-    const completedMock: Task = { ...mockTask, status: 'Completed' };
+    const updatedMock: Task = { ...mockTask, title: 'Editada' };
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify(updatedMock), { status: 200 }),
+    );
+    const updated = await taskService.updateTask(1, {
+      title: 'Editada',
+      description: 'Desc',
+    });
+    expect(updated.title).toBe('Editada');
+
+    const completedMock: Task = { ...updatedMock, status: 'Completed' };
     fetchSpy.mockResolvedValueOnce(
       new Response(JSON.stringify(completedMock), { status: 200 }),
     );

@@ -1,4 +1,4 @@
-"""Endpoints REST para la gestión de tareas."""
+"""Endpoints REST para la gestión completa de tareas."""
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.orm import Session
@@ -11,6 +11,7 @@ from app.schemas import (
     TaskCreate,
     TaskResponse,
     TaskStatusUpdate,
+    TaskUpdate,
 )
 
 router = APIRouter(prefix="/api/tasks", tags=["Tasks"])
@@ -71,6 +72,22 @@ def create_new_task(
 ) -> Task:
     """Registra una nueva tarea con título y descripción validados."""
     return crud.create_task(db, task_in)
+
+
+@router.put(
+    "/{task_id}",
+    response_model=TaskResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar una tarea existente",
+)
+def update_existing_task(
+    task_in: TaskUpdate,
+    task_id: int = Path(..., ge=1, description="Identificador único de la tarea"),
+    db: Session = Depends(get_db),
+) -> Task:
+    """Modifica el título, la descripción y opcionalmente el estado de una tarea."""
+    db_task = _get_existing_task_or_404(db, task_id)
+    return crud.update_task(db, db_task, task_in)
 
 
 @router.patch(

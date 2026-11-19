@@ -3,6 +3,7 @@ import {
   Task,
   TaskCreateInput,
   TaskStatus,
+  TaskUpdateInput,
 } from '../types/task';
 
 const rawBaseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -42,6 +43,15 @@ export const taskService = {
   async createTask(payload: TaskCreateInput): Promise<Task> {
     const response = await fetch(`${API_BASE_URL}/api/tasks`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    return parseResponse<Task>(response);
+  },
+
+  async updateTask(id: number, payload: TaskUpdateInput): Promise<Task> {
+    const response = await fetch(`${API_BASE_URL}/api/tasks/${id}`, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });

@@ -101,6 +101,53 @@ describe('App - Task Manager UI & Integration', () => {
     );
   });
 
+  it('permite editar una tarea existente o cancelar la edición', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(taskService, 'getTasks').mockResolvedValueOnce([sampleTasks[0]]);
+    const updateSpy = vi
+      .spyOn(taskService, 'updateTask')
+      .mockResolvedValueOnce({
+        ...sampleTasks[0],
+        title: 'Docker Compose Actualizado',
+        description: 'Con healthcheck en PostgreSQL',
+      });
+
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText('Configurar Docker Compose')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByTestId('task-edit-btn'));
+    expect(screen.getByTestId('task-title-input')).toHaveValue(
+      'Configurar Docker Compose',
+    );
+    await user.click(screen.getByTestId('task-cancel-edit-button'));
+    expect(screen.getByTestId('task-title-input')).toHaveValue('');
+
+    await user.click(screen.getByTestId('task-edit-btn'));
+    const titleInput = screen.getByTestId('task-title-input');
+    const descInput = screen.getByTestId('task-description-input');
+
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Docker Compose Actualizado');
+    await user.clear(descInput);
+    await user.type(descInput, 'Con healthcheck en PostgreSQL');
+    await user.click(screen.getByTestId('task-submit-button'));
+
+    await waitFor(() => {
+      expect(updateSpy).toHaveBeenCalledWith(1, {
+        title: 'Docker Compose Actualizado',
+        description: 'Con healthcheck en PostgreSQL',
+        status: 'Pending',
+      });
+    });
+
+    expect(screen.getByText('Docker Compose Actualizado')).toBeInTheDocument();
+    expect(screen.getByTestId('alert-banner')).toHaveTextContent(
+      'Tarea actualizada correctamente.',
+    );
+  });
+
   it('cambia el estado de una tarea entre Pending y Completed', async () => {
     const user = userEvent.setup();
     vi.spyOn(taskService, 'getTasks').mockResolvedValueOnce([sampleTasks[0]]);

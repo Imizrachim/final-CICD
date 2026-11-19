@@ -1,18 +1,34 @@
-import React, { useState } from 'react';
-import { TaskCreateInput } from '../types/task';
+import React, { useEffect, useState } from 'react';
+import { Task, TaskCreateInput } from '../types/task';
 
 interface TaskFormProps {
+  editingTask: Task | null;
   isSubmitting: boolean;
   onSubmit: (data: TaskCreateInput) => Promise<boolean>;
+  onCancelEdit: () => void;
 }
 
 export const TaskForm: React.FC<TaskFormProps> = ({
+  editingTask,
   isSubmitting,
   onSubmit,
+  onCancelEdit,
 }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (editingTask) {
+      setTitle(editingTask.title);
+      setDescription(editingTask.description);
+      setValidationError(null);
+    } else {
+      setTitle('');
+      setDescription('');
+      setValidationError(null);
+    }
+  }, [editingTask]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -35,7 +51,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
       description: cleanedDescription,
     });
 
-    if (success) {
+    if (success && !editingTask) {
       setTitle('');
       setDescription('');
     }
@@ -44,7 +60,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
   return (
     <section className="form-card" aria-labelledby="task-form-heading">
       <h2 id="task-form-heading" className="section-title">
-        Nueva Tarea
+        {editingTask ? 'Editar Tarea' : 'Nueva Tarea'}
       </h2>
       <form onSubmit={handleSubmit} data-testid="task-form" noValidate>
         <div className="form-group">
@@ -95,13 +111,28 @@ export const TaskForm: React.FC<TaskFormProps> = ({
         )}
 
         <div className="form-actions">
+          {editingTask && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onCancelEdit}
+              disabled={isSubmitting}
+              data-testid="task-cancel-edit-button"
+            >
+              Cancelar
+            </button>
+          )}
           <button
             type="submit"
             className="btn btn-primary"
             disabled={isSubmitting}
             data-testid="task-submit-button"
           >
-            {isSubmitting ? 'Guardando...' : 'Crear Tarea'}
+            {isSubmitting
+              ? 'Guardando...'
+              : editingTask
+                ? 'Guardar Cambios'
+                : 'Crear Tarea'}
           </button>
         </div>
       </form>

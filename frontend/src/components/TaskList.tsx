@@ -8,6 +8,7 @@ interface TaskListProps {
   isLoading: boolean;
   isBusy: boolean;
   onToggleStatus: (task: Task) => void;
+  onEdit: (task: Task) => void;
   onRequestDelete: (task: Task) => void;
 }
 
@@ -17,6 +18,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   isLoading,
   isBusy,
   onToggleStatus,
+  onEdit,
   onRequestDelete,
 }) => {
   if (isLoading) {
@@ -51,6 +53,7 @@ export const TaskList: React.FC<TaskListProps> = ({
           task={task}
           isBusy={isBusy}
           onToggleStatus={onToggleStatus}
+          onEdit={onEdit}
           onRequestDelete={onRequestDelete}
         />
       ))}

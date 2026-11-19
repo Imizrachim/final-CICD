@@ -152,7 +152,7 @@ def _fill_and_submit_task_form(
     title: str,
     description: str,
 ) -> None:
-    """Rellena y envía el formulario de creación de tarea."""
+    """Rellena y envía el formulario de creación o edición de tarea."""
     title_input = wait.until(
         EC.element_to_be_clickable(
             (By.CSS_SELECTOR, "[data-testid='task-title-input']")
@@ -224,18 +224,21 @@ def _verify_filters_and_delete_task(
 @pytest.mark.acceptance
 def test_selenium_complete_task_manager_workflow(driver: WebDriver) -> None:
     """
-    Escenario de aceptación con Selenium para las funciones base:
+    Escenario completo de aceptación con Selenium que valida los 7 puntos requeridos:
     1. Carga correcta de la aplicación.
     2. Creación de una tarea.
     3. Visualización de la tarea.
-    4. Cambio de estado.
-    5. Filtrado de tareas.
-    6. Eliminación de una tarea.
+    4. Edición de la información.
+    5. Cambio de estado.
+    6. Filtrado de tareas.
+    7. Eliminación de una tarea.
     """
     wait = WebDriverWait(driver, 15)
     suffix = uuid.uuid4().hex[:6]
     initial_title = f"Tarea Selenium {suffix}"
     initial_desc = f"Descripción inicial E2E {suffix}"
+    edited_title = f"Tarea Selenium Editada {suffix}"
+    edited_desc = f"Descripción actualizada E2E {suffix}"
 
     # 1. Carga correcta de la aplicación
     driver.get(FRONTEND_URL)
@@ -269,8 +272,26 @@ def test_selenium_complete_task_manager_workflow(driver: WebDriver) -> None:
     assert initial_desc in task_card.text
     _assert_backend_task(task_id, initial_title, initial_desc, "Pending")
 
-    # 4. Cambio de estado (Pending -> Completed)
-    task_card.find_element(
+    # 4. Edición de la información
+    task_card.find_element(By.CSS_SELECTOR, "[data-testid='task-edit-btn']").click()
+    _fill_and_submit_task_form(driver, wait, edited_title, edited_desc)
+
+    edited_card = wait.until(
+        EC.visibility_of_element_located(
+            (
+                By.XPATH,
+                f"//article[@data-testid='task-card' and "
+                f"@data-task-id='{task_id}' and "
+                f".//*[@data-testid='task-title' and "
+                f"contains(text(), '{edited_title}')]]",
+            )
+        )
+    )
+    assert edited_desc in edited_card.text
+    _assert_backend_task(task_id, edited_title, edited_desc, "Pending")
+
+    # 5. Cambio de estado (Pending -> Completed)
+    edited_card.find_element(
         By.CSS_SELECTOR, "[data-testid='task-toggle-status-btn']"
     ).click()
 
@@ -285,7 +306,7 @@ def test_selenium_complete_task_manager_workflow(driver: WebDriver) -> None:
             )
         )
     )
-    _assert_backend_task(task_id, initial_title, initial_desc, "Completed")
+    _assert_backend_task(task_id, edited_title, edited_desc, "Completed")
 
-    # 5. Filtrado y 6. Eliminación con confirmación
+    # 6. Filtrado y 7. Eliminación con confirmación
     _verify_filters_and_delete_task(driver, wait, task_id)
