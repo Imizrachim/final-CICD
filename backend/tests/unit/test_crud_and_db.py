@@ -10,7 +10,7 @@ from app.config import Settings, normalize_database_url
 from app.database import build_engine, get_db, init_db, wait_for_db
 from app.main import app
 from app.models import Task, TaskStatus
-from app.schemas import TaskCreate, TaskStatusUpdate
+from app.schemas import TaskCreate, TaskStatusUpdate, TaskUpdate
 
 
 def test_normalize_database_url_variants() -> None:
@@ -98,13 +98,21 @@ def test_crud_rollbacks_on_sqlalchemy_error() -> None:
     assert mock_session.rollback.call_count == 1
 
     with pytest.raises(SQLAlchemyError):
+        crud.update_task(
+            mock_session,
+            sample_task,
+            TaskUpdate(title="Editada", description="Desc"),
+        )
+    assert mock_session.rollback.call_count == 2
+
+    with pytest.raises(SQLAlchemyError):
         crud.update_task_status(
             mock_session,
             sample_task,
             TaskStatusUpdate(status=TaskStatus.COMPLETED),
         )
-    assert mock_session.rollback.call_count == 2
+    assert mock_session.rollback.call_count == 3
 
     with pytest.raises(SQLAlchemyError):
         crud.delete_task(mock_session, sample_task)
-    assert mock_session.rollback.call_count == 3
+    assert mock_session.rollback.call_count == 4

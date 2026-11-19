@@ -16,6 +16,12 @@ export interface TaskCreateInput {
   description: string;
 }
 
+export interface TaskUpdateInput {
+  title: string;
+  description: string;
+  status?: TaskStatus;
+}
+
 export interface DeleteTaskResult {
   message: string;
   id: number;

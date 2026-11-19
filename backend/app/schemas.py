@@ -7,7 +7,7 @@ from app.models import TaskStatus
 
 
 class TaskBase(BaseModel):
-    """Atributos comunes y validaciones para creación de tareas."""
+    """Atributos comunes y validaciones para creación y edición de tareas."""
 
     title: str = Field(
         ...,
@@ -44,6 +44,15 @@ class TaskCreate(TaskBase):
     status: TaskStatus = Field(
         default=TaskStatus.PENDING,
         description="Estado inicial de la tarea (Pending o Completed).",
+    )
+
+
+class TaskUpdate(TaskBase):
+    """Esquema para actualizar título, descripción y opcionalmente estado."""
+
+    status: TaskStatus | None = Field(
+        default=None,
+        description="Estado opcional al actualizar una tarea.",
     )
 
 

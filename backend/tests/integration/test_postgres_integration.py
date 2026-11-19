@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.models import Task, TaskStatus
-from app.schemas import TaskCreate, TaskStatusUpdate
+from app.schemas import TaskCreate, TaskStatusUpdate, TaskUpdate
 from tests.conftest import TestingSessionLocal, test_engine
 
 
@@ -59,7 +59,7 @@ def test_database_persistence_across_sessions(db_session: Session) -> None:
 
 @pytest.mark.integration
 def test_database_crud_lifecycle_and_filters(db_session: Session) -> None:
-    """Valida creación, consulta, cambio de estado y eliminación en BD."""
+    """Valida creación, consulta, edición, cambio de estado y eliminación en BD."""
     task_a = crud.create_task(
         db_session,
         TaskCreate(title="Tarea Integración A", description="Pendiente inicial"),
@@ -84,9 +84,21 @@ def test_database_crud_lifecycle_and_filters(db_session: Session) -> None:
     assert len(completed_only) == 1
     assert completed_only[0].id == task_b.id
 
-    toggled_a = crud.update_task_status(
+    updated_a = crud.update_task(
         db_session,
         task_a,
+        TaskUpdate(
+            title="Tarea Integración A Editada",
+            description="Descripción modificada en BD",
+        ),
+    )
+    assert updated_a.title == "Tarea Integración A Editada"
+    assert updated_a.description == "Descripción modificada en BD"
+    assert updated_a.updated_at >= updated_a.created_at
+
+    toggled_a = crud.update_task_status(
+        db_session,
+        updated_a,
         TaskStatusUpdate(status=TaskStatus.COMPLETED),
     )
     assert toggled_a.status == TaskStatus.COMPLETED.value
@@ -139,6 +151,15 @@ def test_api_to_database_full_integration_flow(
     db_record = crud.get_task_by_id(db_session, task_id)
     assert db_record is not None
     assert db_record.title == "Desplegar en ECS Fargate"
+
+    put_res = client.put(
+        f"/api/tasks/{task_id}",
+        json={
+            "title": "Desplegar en AWS ECS Fargate",
+            "description": "Imagen publicada en Amazon ECR",
+        },
+    )
+    assert put_res.status_code == 200
 
     patch_res = client.patch(
         f"/api/tasks/{task_id}/status",

@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.models import Task, TaskStatus, utc_now
-from app.schemas import TaskCreate, TaskStatusUpdate
+from app.schemas import TaskCreate, TaskStatusUpdate, TaskUpdate
 
 
 def get_tasks(
@@ -38,6 +38,22 @@ def create_task(db: Session, task_in: TaskCreate) -> Task:
     )
     try:
         db.add(db_task)
+        db.commit()
+        db.refresh(db_task)
+        return db_task
+    except SQLAlchemyError:
+        db.rollback()
+        raise
+
+
+def update_task(db: Session, db_task: Task, task_in: TaskUpdate) -> Task:
+    """Actualiza el título, la descripción y opcionalmente el estado de una tarea."""
+    db_task.title = task_in.title
+    db_task.description = task_in.description or ""
+    if task_in.status is not None:
+        db_task.status = task_in.status.value
+    db_task.updated_at = utc_now()
+    try:
         db.commit()
         db.refresh(db_task)
         return db_task

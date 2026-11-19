@@ -5,6 +5,7 @@ interface TaskCardProps {
   task: Task;
   isBusy: boolean;
   onToggleStatus: (task: Task) => void;
+  onEdit: (task: Task) => void;
   onRequestDelete: (task: Task) => void;
 }
 
@@ -24,6 +25,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   task,
   isBusy,
   onToggleStatus,
+  onEdit,
   onRequestDelete,
 }) => {
   const isCompleted = task.status === 'Completed';
@@ -78,6 +80,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         </button>
 
         <div className="task-secondary-actions">
+          <button
+            type="button"
+            className="btn btn-sm btn-secondary"
+            onClick={() => onEdit(task)}
+            disabled={isBusy}
+            data-testid="task-edit-btn"
+          >
+            Editar
+          </button>
           <button
             type="button"
             className="btn btn-sm btn-danger-outline"
