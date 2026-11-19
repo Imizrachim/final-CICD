@@ -34,9 +34,7 @@ HEADLESS = os.getenv("SELENIUM_HEADLESS", "true").lower() != "false"
 class QuietSPAHandler(SimpleHTTPRequestHandler):
     """Sirve los archivos estáticos de frontend/dist sin ruido en consola."""
 
-    def log_message(
-        self, format: str, *args: object  # pylint: disable=W0622
-    ) -> None:
+    def log_message(self, format: str, *args: object) -> None:  # pylint: disable=W0622
         """Silencia los logs HTTP durante las pruebas E2E."""
 
 
@@ -207,9 +205,7 @@ def _verify_filters_and_delete_task(
         EC.visibility_of_element_located((By.CSS_SELECTOR, card_selector))
     )
 
-    target_card.find_element(
-        By.CSS_SELECTOR, "[data-testid='task-delete-btn']"
-    ).click()
+    target_card.find_element(By.CSS_SELECTOR, "[data-testid='task-delete-btn']").click()
 
     confirm_modal = wait.until(
         EC.visibility_of_element_located(
